@@ -4,19 +4,28 @@ project(SQLite3
     LANGUAGES C
     )
 
+###############
+# ASI default settings
+list(APPEND CMAKE_MODULE_PATH "$ENV{ASV_CMAKE}")
+include(asv_cmake_defaults)
+asv_cmake_defaults( )
+###############
+
 include(GNUInstallDirs)
 
 #------------------------------------------------------------------------------
 # build options and optional modules:
 option(SQLITE_ENABLE_DBSTAT_VTAB  "enables dbstat virtual table"                 OFF)
 option(SQLITE_ENABLE_FTS3         "enables full text searches version 3"         OFF)
-option(SQLITE_ENABLE_FTS4         "enables full text searches version 3 & 4"     OFF)
-option(SQLITE_ENABLE_FTS5         "enables full text searches version 5"         OFF)
+option(SQLITE_ENABLE_FTS4         "enables full text searches version 3 & 4"     ON)
+option(SQLITE_ENABLE_FTS5         "enables full text searches version 5"         ON)
 option(SQLITE_ENABLE_GEOPOLY      "enables Geopoly extention"                    OFF)
 option(SQLITE_ENABLE_ICU          "enables international components for unicode" OFF)
-option(SQLITE_ENABLE_JSON1        "enables JSON SQL functions"                   ON)
-option(SQLITE_ENABLE_RBU          "enables resumable bulk update extension"      OFF)
-option(SQLITE_ENABLE_RTREE        "enables R*TRee index extension"               OFF)
+option(SQLITE_ENABLE_JSON1        "enables JSON SQL functins"                    ON)
+option(SQLITE_ENABLE_RBU          "enables resumable bulk update extension"      ON)
+option(SQLITE_ENABLE_RTREE        "enables R*TRee index extension"               ON)
+option(SQLITE_ENABLE_STAT4        "enables ??"                                   ON)
+option(SQLITE_ENABLE_THREADSAFE   "enables ??"                                   OFF)
 option(SQLITE_RECOMMENDED_OPTIONS "compile by SQLite3 recommended options"       ON)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -30,7 +39,6 @@ add_library(${PROJECT_NAME} STATIC sqlite3.c)
 set_target_properties(${PROJECT_NAME} PROPERTIES
     OUTPUT_NAME   sqlite3
     PUBLIC_HEADER sqlite3.h
-    DEBUG_POSTFIX d
     )
 target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
 target_compile_definitions(${PROJECT_NAME} PUBLIC # inject user's options
@@ -44,16 +52,18 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC # inject user's options
         $<$<BOOL:${SQLITE_ENABLE_JSON1}>:SQLITE_ENABLE_JSON1>
         $<$<BOOL:${SQLITE_ENABLE_RBU}>:SQLITE_ENABLE_RBU>
         $<$<BOOL:${SQLITE_ENABLE_RTREE}>:SQLITE_ENABLE_RTREE>
+        $<$<BOOL:${SQLITE_ENABLE_STAT4}>:SQLITE_ENABLE_STAT4>
+        $<$<BOOL:${SQLITE_ENABLE_THREADSAFE}>:SQLITE_ENABLE_THREADSAFE>
         $<$<BOOL:${SQLITE_RECOMMENDED_OPTIONS}>:
             SQLITE_DQS=0
             SQLITE_DEFAULT_MEMSTATUS=0
             SQLITE_DEFAULT_WAL_SYNCHRONOUS=1
             SQLITE_LIKE_DOESNT_MATCH_BLOBS
             SQLITE_MAX_EXPR_DEPTH=0
-            SQLITE_OMIT_DECLTYPE
-            SQLITE_OMIT_DEPRECATED
-            SQLITE_OMIT_PROGRESS_CALLBACK
-            SQLITE_OMIT_SHARED_CACHE
+            # ASI SQLITE_OMIT_DECLTYPE
+            # ASI SQLITE_OMIT_DEPRECATED
+            # ASI SQLITE_OMIT_PROGRESS_CALLBACK
+            # ASI SQLITE_OMIT_SHARED_CACHE
             SQLITE_USE_ALLOCA
         >
     >
@@ -62,7 +72,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC # inject user's options
 # platform/compiler specific settings
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
     find_package(Threads REQUIRED)
-    target_link_libraries(${PROJECT_NAME} INTERFACE Threads::Threads ${CMAKE_DL_LIBS})
+    target_link_libraries(${PROJECT_NAME} INTERFACE Threads::Threads ${CMAKE_DL_LIBS} m)
 elseif(WIN32 AND ${CMAKE_SIZEOF_VOID_P} LESS 8) # this is a 32bit windows
     option(BUILD_WITH_XPSDK "build for old 32bit (WinXP/2003) targets" OFF)
     if(BUILD_WITH_XPSDK)
@@ -92,7 +102,7 @@ install(FILES
 
 #------------------------------------------------------------------------------
 # SQLite3 shell application:
-option(BUILD_SHELL "build SQLite3 shell application" OFF)
+option(BUILD_SHELL "build SQLite3 shell application" ON)
 if(BUILD_SHELL)
     add_executable(shell_app shell.c)
     set_target_properties(shell_app PROPERTIES OUTPUT_NAME sqlite3)
