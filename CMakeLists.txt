@@ -69,14 +69,58 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC # inject user's options
     >
     )
 
+# DON'T REALLY NEED TO RECOMPILE....
+# SQLite3 as shared library:
+set(SHARED_PROJECT_NAME ${PROJECT_NAME}-shared)
+add_library(${SHARED_PROJECT_NAME} SHARED sqlite3.c)
+set_target_properties(${SHARED_PROJECT_NAME} PROPERTIES
+    OUTPUT_NAME   sqlite3-shared
+    PUBLIC_HEADER sqlite3.h
+    WINDOWS_EXPORT_ALL_SYMBOLS ON
+    )
+target_include_directories(${SHARED_PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+target_compile_definitions(${SHARED_PROJECT_NAME} PUBLIC # inject user's options
+    $<BUILD_INTERFACE:
+        $<$<BOOL:${SQLITE_ENABLE_DBSTAT_VTAB}>:SQLITE_ENABLE_DBSTAT_VTAB>
+        $<$<BOOL:${SQLITE_ENABLE_FTS3}>:SQLITE_ENABLE_FTS3>
+        $<$<BOOL:${SQLITE_ENABLE_FTS4}>:SQLITE_ENABLE_FTS4>
+        $<$<BOOL:${SQLITE_ENABLE_FTS5}>:SQLITE_ENABLE_FTS5>
+        $<$<BOOL:${SQLITE_ENABLE_GEOPOLY}>:SQLITE_ENABLE_GEOPOLY>
+        $<$<BOOL:${SQLITE_ENABLE_ICU}>:SQLITE_ENABLE_ICU>
+        $<$<BOOL:${SQLITE_ENABLE_JSON1}>:SQLITE_ENABLE_JSON1>
+        $<$<BOOL:${SQLITE_ENABLE_RBU}>:SQLITE_ENABLE_RBU>
+        $<$<BOOL:${SQLITE_ENABLE_RTREE}>:SQLITE_ENABLE_RTREE>
+        $<$<BOOL:${SQLITE_ENABLE_STAT4}>:SQLITE_ENABLE_STAT4>
+        $<$<BOOL:${SQLITE_ENABLE_THREADSAFE}>:SQLITE_ENABLE_THREADSAFE>
+        $<$<BOOL:${SQLITE_RECOMMENDED_OPTIONS}>:
+            SQLITE_DQS=0
+            SQLITE_DEFAULT_MEMSTATUS=0
+            SQLITE_DEFAULT_WAL_SYNCHRONOUS=1
+            SQLITE_LIKE_DOESNT_MATCH_BLOBS
+            SQLITE_MAX_EXPR_DEPTH=0
+            # ASI SQLITE_OMIT_DECLTYPE
+            # ASI SQLITE_OMIT_DEPRECATED
+            # ASI SQLITE_OMIT_PROGRESS_CALLBACK
+            # ASI SQLITE_OMIT_SHARED_CACHE
+            SQLITE_USE_ALLOCA
+        >
+    >
+    )
+
 # platform/compiler specific settings
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
     find_package(Threads REQUIRED)
     target_link_libraries(${PROJECT_NAME} INTERFACE Threads::Threads ${CMAKE_DL_LIBS} m)
+    target_link_libraries(${SHARED_PROJECT_NAME} INTERFACE Threads::Threads ${CMAKE_DL_LIBS} m)
 elseif(WIN32 AND ${CMAKE_SIZEOF_VOID_P} LESS 8) # this is a 32bit windows
     option(BUILD_WITH_XPSDK "build for old 32bit (WinXP/2003) targets" OFF)
     if(BUILD_WITH_XPSDK)
         target_compile_definitions(${PROJECT_NAME} PUBLIC
+            $<BUILD_INTERFACE:
+                -DSQLITE_OS_WINRT=0 -D_WIN32_WINNT=0x0502 -DWINVER=0x0502
+            >
+            )
+        target_compile_definitions(${SHARED_PROJECT_NAME} PUBLIC
             $<BUILD_INTERFACE:
                 -DSQLITE_OS_WINRT=0 -D_WIN32_WINNT=0x0502 -DWINVER=0x0502
             >
@@ -87,9 +131,10 @@ endif()
 #------------------------------------------------------------------------------
 configure_file(sqlite3_config.h.in ${CMAKE_BINARY_DIR}/sqlite3_config.h)
 
-install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Config
+install(TARGETS ${PROJECT_NAME} ${SHARED_PROJECT_NAME} EXPORT ${PROJECT_NAME}Config
     ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
 install(EXPORT  ${PROJECT_NAME}Config
