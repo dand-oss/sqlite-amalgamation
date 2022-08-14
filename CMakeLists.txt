@@ -30,6 +30,9 @@ option(SQLITE_OMIT_DECLTYPE          "omit declared type of columns"            
 option(SQLITE_OMIT_JSON              "disables JSON SQL functions"                     OFF)
 option(SQLITE_RECOMMENDED_OPTIONS    "compile by SQLite3 recommended options"          ON)
 option(SQLITE_USE_URI                "enables the default URI filename processing"     OFF)
+option(SQLITE_TEMP_STORE             "enables in-memory files"                         ON)
+option(SQLITE_OS_UNIX                "Build for Linux"                                 ON)
+option(SQLITE_OS_WIN                 "Build for Windows"                               OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Release or Debug?" FORCE)
@@ -67,6 +70,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC # inject user's options
         $<$<BOOL:${SQLITE_OMIT_JSON}>:SQLITE_OMIT_JSON>
         $<$<BOOL:${SQLITE_USE_URI}>:SQLITE_USE_URI>
         $<$<BOOL:${SQLITE_ENABLE_THREADSAFE}>:SQLITE_ENABLE_THREADSAFE>
+        $<$<BOOL:${SQLITE_TEMP_STORE}>:SQLITE_TEMP_STORE>
+        $<$<BOOL:${SQLITE_OS_UNIX}>:SQLITE_OS_UNIX>
+        $<$<BOOL:${SQLITE_OS_WIN}>:SQLITE_OS_WIN>
 
         $<$<BOOL:${SQLITE_RECOMMENDED_OPTIONS}>:
             SQLITE_DEFAULT_MEMSTATUS=0
@@ -82,6 +88,53 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC # inject user's options
     >
     )
 
+#------------------------------------------------------------------------------
+
+set(CRY_PROJECT_NAME ${PROJECT_NAME}cry)
+
+# SQLite3 with Crypto as static library:
+add_library(${CRY_PROJECT_NAME} STATIC sqlite3.c crypto_vfs.c)
+set_target_properties(${CRY_PROJECT_NAME} PROPERTIES
+    OUTPUT_NAME   sqlite3cry
+    PUBLIC_HEADER sqlite3.h
+    )
+target_include_directories(${CRY_PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+target_compile_definitions(${CRY_PROJECT_NAME} PUBLIC # inject user's options
+    $<BUILD_INTERFACE:
+        $<$<BOOL:${SQLITE_ENABLE_COLUMN_METADATA}>:SQLITE_ENABLE_COLUMN_METADATA>
+        $<$<BOOL:${SQLITE_ENABLE_DBSTAT_VTAB}>:SQLITE_ENABLE_DBSTAT_VTAB>
+        $<$<BOOL:${SQLITE_ENABLE_FTS3}>:SQLITE_ENABLE_FTS3>
+        $<$<BOOL:${SQLITE_ENABLE_FTS4}>:SQLITE_ENABLE_FTS4>
+        $<$<BOOL:${SQLITE_ENABLE_FTS5}>:SQLITE_ENABLE_FTS5>
+        $<$<BOOL:${SQLITE_ENABLE_GEOPOLY}>:SQLITE_ENABLE_GEOPOLY>
+        $<$<BOOL:${SQLITE_ENABLE_ICU}>:SQLITE_ENABLE_ICU>
+        $<$<BOOL:${SQLITE_ENABLE_MATH_FUNCTIONS}>:SQLITE_ENABLE_MATH_FUNCTIONS>
+        $<$<BOOL:${SQLITE_ENABLE_RBU}>:SQLITE_ENABLE_RBU>
+        $<$<BOOL:${SQLITE_ENABLE_RTREE}>:SQLITE_ENABLE_RTREE>
+        $<$<BOOL:${SQLITE_ENABLE_STAT4}>:SQLITE_ENABLE_STAT4>
+        $<$<BOOL:${SQLITE_OMIT_DECLTYPE}>:SQLITE_OMIT_DECLTYPE>
+        $<$<BOOL:${SQLITE_OMIT_JSON}>:SQLITE_OMIT_JSON>
+        $<$<BOOL:${SQLITE_USE_URI}>:SQLITE_USE_URI>
+        $<$<BOOL:${SQLITE_ENABLE_THREADSAFE}>:SQLITE_ENABLE_THREADSAFE>
+        $<$<BOOL:${SQLITE_TEMP_STORE}>:SQLITE_TEMP_STORE>
+        $<$<BOOL:${SQLITE_OS_UNIX}>:SQLITE_OS_UNIX>
+        $<$<BOOL:${SQLITE_OS_WIN}>:SQLITE_OS_WIN>
+        $<$<BOOL:${SQLITE_RECOMMENDED_OPTIONS}>:
+            SQLITE_DEFAULT_MEMSTATUS=0
+            SQLITE_DEFAULT_WAL_SYNCHRONOUS=1
+            SQLITE_DQS=0
+            SQLITE_LIKE_DOESNT_MATCH_BLOBS
+            SQLITE_MAX_EXPR_DEPTH=0
+            # SQLITE_OMIT_DEPRECATED
+            # SQLITE_OMIT_PROGRESS_CALLBACK
+            # SQLITE_OMIT_SHARED_CACHE
+            SQLITE_USE_ALLOCA
+        >
+        SQLITE_CRYVFS
+    >
+    )
+
+#------------------------------------------------------------------------------
 # DON'T REALLY NEED TO RECOMPILE....
 # SQLite3 as shared library:
 set(SHARED_PROJECT_NAME ${PROJECT_NAME}-shared)
@@ -108,6 +161,9 @@ target_compile_definitions(${SHARED_PROJECT_NAME} PUBLIC # inject user's options
         $<$<BOOL:${SQLITE_ENABLE_STAT4}>:SQLITE_ENABLE_STAT4>
         $<$<BOOL:${SQLITE_USE_URI}>:SQLITE_USE_URI>
         $<$<BOOL:${SQLITE_ENABLE_THREADSAFE}>:SQLITE_ENABLE_THREADSAFE>
+        $<$<BOOL:${SQLITE_TEMP_STORE}>:SQLITE_TEMP_STORE>
+        $<$<BOOL:${SQLITE_OS_UNIX}>:SQLITE_OS_UNIX>
+        $<$<BOOL:${SQLITE_OS_WIN}>:SQLITE_OS_WIN>
         $<$<BOOL:${SQLITE_RECOMMENDED_OPTIONS}>:
             SQLITE_DQS=0
             SQLITE_DEFAULT_MEMSTATUS=0
@@ -123,12 +179,63 @@ target_compile_definitions(${SHARED_PROJECT_NAME} PUBLIC # inject user's options
      >
      )
 
+#------------------------------------------------------------------------------
+# SQLite3 with Crypto as shared library:
+set(SHARED_CRY_PROJECT_NAME ${PROJECT_NAME}cry-shared)
+add_library(${SHARED_CRY_PROJECT_NAME} SHARED sqlite3.c crypto_vfs.c)
+set_target_properties(${SHARED_CRY_PROJECT_NAME} PROPERTIES
+    OUTPUT_NAME   sqlite3cry-shared
+    PUBLIC_HEADER sqlite3.h
+    WINDOWS_EXPORT_ALL_SYMBOLS ON
+    )
+target_include_directories(${SHARED_CRY_PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+target_compile_definitions(${SHARED_CRY_PROJECT_NAME} PUBLIC # inject user's options
+    # copy of above
+    $<BUILD_INTERFACE:
+        $<$<BOOL:${SQLITE_ENABLE_DBSTAT_VTAB}>:SQLITE_ENABLE_DBSTAT_VTAB>
+        $<$<BOOL:${SQLITE_ENABLE_FTS3}>:SQLITE_ENABLE_FTS3>
+        $<$<BOOL:${SQLITE_ENABLE_FTS4}>:SQLITE_ENABLE_FTS4>
+        $<$<BOOL:${SQLITE_ENABLE_FTS5}>:SQLITE_ENABLE_FTS5>
+        $<$<BOOL:${SQLITE_ENABLE_GEOPOLY}>:SQLITE_ENABLE_GEOPOLY>
+        $<$<BOOL:${SQLITE_ENABLE_ICU}>:SQLITE_ENABLE_ICU>
+        $<$<BOOL:${SQLITE_ENABLE_JSON1}>:SQLITE_ENABLE_JSON1>
+        $<$<BOOL:${SQLITE_ENABLE_MATH_FUNCTIONS}>:SQLITE_ENABLE_MATH_FUNCTIONS>
+        $<$<BOOL:${SQLITE_ENABLE_RBU}>:SQLITE_ENABLE_RBU>
+        $<$<BOOL:${SQLITE_ENABLE_RTREE}>:SQLITE_ENABLE_RTREE>
+        $<$<BOOL:${SQLITE_ENABLE_STAT4}>:SQLITE_ENABLE_STAT4>
+        $<$<BOOL:${SQLITE_USE_URI}>:SQLITE_USE_URI>
+        $<$<BOOL:${SQLITE_ENABLE_THREADSAFE}>:SQLITE_ENABLE_THREADSAFE>
+        $<$<BOOL:${SQLITE_TEMP_STORE}>:SQLITE_TEMP_STORE>
+        $<$<BOOL:${SQLITE_OS_UNIX}>:SQLITE_OS_UNIX>
+        $<$<BOOL:${SQLITE_OS_WIN}>:SQLITE_OS_WIN>
+        $<$<BOOL:${SQLITE_RECOMMENDED_OPTIONS}>:
+            SQLITE_DQS=0
+            SQLITE_DEFAULT_MEMSTATUS=0
+            SQLITE_DEFAULT_WAL_SYNCHRONOUS=1
+            SQLITE_LIKE_DOESNT_MATCH_BLOBS
+            SQLITE_MAX_EXPR_DEPTH=0
+            # ASI SQLITE_OMIT_DECLTYPE
+            # ASI SQLITE_OMIT_DEPRECATED
+            # ASI SQLITE_OMIT_PROGRESS_CALLBACK
+            # SQLITE_OMIT_SHARED_CACHE
+             SQLITE_USE_ALLOCA
+         >
+        SQLITE_CRYVFS
+     >
+     )
+
+#------------------------------------------------------------------------------
 # platform/compiler specific settings
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
     find_package(Threads REQUIRED)
     target_link_libraries(${PROJECT_NAME} INTERFACE Threads::Threads ${CMAKE_DL_LIBS} m)
     target_link_libraries(${SHARED_PROJECT_NAME} PUBLIC Threads::Threads ${CMAKE_DL_LIBS} m)
     set_target_properties(${SHARED_PROJECT_NAME} PROPERTIES LINK_FLAGS "-Wl,--no-undefined")
+
+    # crypto platform/compiler specific settings
+    target_link_libraries(${CRY_PROJECT_NAME} INTERFACE Threads::Threads ${CMAKE_DL_LIBS} m)
+    target_link_libraries(${SHARED_CRY_PROJECT_NAME} PUBLIC Threads::Threads ${CMAKE_DL_LIBS} m)
+    set_target_properties(${SHARED_CRY_PROJECT_NAME} PROPERTIES LINK_FLAGS "-Wl,--no-undefined")
 
 elseif(WIN32 AND ${CMAKE_SIZEOF_VOID_P} LESS 8) # this is a 32bit windows
     option(BUILD_WITH_XPSDK "build for old 32bit (WinXP/2003) targets" OFF)
@@ -138,7 +245,18 @@ elseif(WIN32 AND ${CMAKE_SIZEOF_VOID_P} LESS 8) # this is a 32bit windows
                 -DSQLITE_OS_WINRT=0 -D_WIN32_WINNT=0x0502 -DWINVER=0x0502
             >
             )
+        target_compile_definitions(${CRY_PROJECT_NAME} PUBLIC
+            $<BUILD_INTERFACE:
+                -DSQLITE_OS_WINRT=0 -D_WIN32_WINNT=0x0502 -DWINVER=0x0502
+            >
+            )
+
         target_compile_definitions(${SHARED_PROJECT_NAME} PUBLIC
+            $<BUILD_INTERFACE:
+                -DSQLITE_OS_WINRT=0 -D_WIN32_WINNT=0x0502 -DWINVER=0x0502
+            >
+            )
+        target_compile_definitions(${SHARED_CRY_PROJECT_NAME} PUBLIC
             $<BUILD_INTERFACE:
                 -DSQLITE_OS_WINRT=0 -D_WIN32_WINNT=0x0502 -DWINVER=0x0502
             >
@@ -153,13 +271,28 @@ install(TARGETS ${PROJECT_NAME} ${SHARED_PROJECT_NAME} EXPORT ${PROJECT_NAME}Con
     ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}
-    
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
+
+# crypto
+install(TARGETS ${CRY_PROJECT_NAME} ${SHARED_CRY_PROJECT_NAME} EXPORT ${CRY_PROJECT_NAME}Config
+    ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+
 install(EXPORT  ${PROJECT_NAME}Config
     NAMESPACE   SQLite::
     DESTINATION cmake
     )
+
+# crypto
+install(EXPORT  ${CRY_PROJECT_NAME}Config
+    NAMESPACE   SQLite::
+    DESTINATION cmake
+    )
+
 install(FILES
     ${CMAKE_BINARY_DIR}/sqlite3_config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
@@ -171,6 +304,12 @@ if(BUILD_SHELL)
     add_executable(shell_app shell.c)
     set_target_properties(shell_app PROPERTIES OUTPUT_NAME sqlite3)
     target_link_libraries(shell_app PRIVATE ${PROJECT_NAME})
+
+# crypto shell
+    add_executable(shell_app_cry shell.c)
+    set_target_properties(shell_app_cry PROPERTIES OUTPUT_NAME sqlite3cry)
+    target_link_libraries(shell_app_cry PRIVATE ${CRY_PROJECT_NAME})
+
     if(MSVC)
         option(BUILD_SHELL_STATIC "build shell by static c/c++ runtime" ON)
         foreach(flag CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_DEBUG)
@@ -183,6 +322,11 @@ if(BUILD_SHELL)
         endforeach()
     endif()
     install(TARGETS shell_app
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        )
+
+    # install crypto
+    install(TARGETS shell_app_cry
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         )
 endif()
