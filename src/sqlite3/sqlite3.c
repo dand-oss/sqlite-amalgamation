@@ -48663,6 +48663,17 @@ SQLITE_API int sqlite3_os_init(void){
   ** database file and tries to choose an locking method appropriate for
   ** that filesystem time.
   */
+#if defined(SQLITE_CRYVFS)
+#pragma message "Using encrypted FS"
+
+    /* the simple file vfs contructor */
+   extern sqlite3_vfs* sqlite3_cryptovfs();
+
+   /* just instantiate the demo vfs, and make it the default */
+   return sqlite3_vfs_register(sqlite3_cryptovfs(), 1);
+#else
+#pragma message "NOT using encrypted FS"
+
   #define UNIXVFS(VFSNAME, FINDER) {                        \
     3,                    /* iVersion */                    \
     sizeof(unixFile),     /* szOsFile */                    \
@@ -48764,6 +48775,8 @@ SQLITE_API int sqlite3_os_init(void){
 
   /* Initialize temp file dir array. */
   unixTempFileInit();
+
+#endif  // crypto_vfs
 
   return SQLITE_OK;
 }
