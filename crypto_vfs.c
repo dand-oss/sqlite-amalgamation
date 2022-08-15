@@ -119,6 +119,7 @@
 // 0 = Alledged RC4 implementing CTR mode
 //     see: http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf
 #define NOCRYPTO (0)
+// #define CRYPTO_DEBUG (1)
 
 #if !defined(__linux__)
   typedef unsigned long ULONG;
@@ -150,9 +151,11 @@ int crypto_vfs_hits = 0;
 #include <stdlib.h>
 
 #if SQLITE_OS_WIN
+#include <windows.h> // GetCurrentDir, Sleep
 #include <io.h>
-#include <fcntl.h>
-#include "ss.h"
+#ifdef CRYPTO_DEBUG
+#include <stdio.h>
+#endif
 #endif
 
 /*
@@ -1114,18 +1117,15 @@ static int cryptoRandomness(sqlite3_vfs *pVfs, int nByte, char *zByte){
 ** of microseconds slept for.
 */
 static int cryptoSleep(sqlite3_vfs *pVfs, int nMicro){
-#if SQLITE_OS_WIN
-    Sleep(nMicro / 1000000);
+#if defined(SQLITE_OS_WIN)
+    Sleep(nMicro / 1000);
 #else
-#if defined(__linux__)
     sleep(nMicro / 1000000);
     usleep(nMicro % 1000000);
-#else
-  sleep_processor(nMicro/1000);
-#endif
 #endif
   return nMicro;
 }
+
 
 /*
 ** Set *pTime to the current UTC time expressed as a Julian day. Return
