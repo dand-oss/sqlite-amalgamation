@@ -55171,6 +55171,15 @@ static int winGetLastError(sqlite3_vfs *pVfs, int nBuf, char *zBuf){
 ** Initialize and deinitialize the operating system interface.
 */
 SQLITE_API int sqlite3_os_init(void){
+#if defined(SQLITE_CRYVFS)
+#pragma message "Using encrypted FS"
+
+    /* the simple file vfs contructor */
+   extern sqlite3_vfs* sqlite3_cryptovfs();
+
+   /* just instantiate the demo vfs, and make it the default */
+   return sqlite3_vfs_register(sqlite3_cryptovfs(), 1);
+#else
   static sqlite3_vfs winVfs = {
     3,                     /* iVersion */
     sizeof(winFile),       /* szOsFile */
@@ -55304,6 +55313,7 @@ SQLITE_API int sqlite3_os_init(void){
 #endif
 
   return SQLITE_OK;
+#endif
 }
 
 SQLITE_API int sqlite3_os_end(void){
