@@ -31,8 +31,14 @@ option(SQLITE_OMIT_JSON              "disables JSON SQL functions"              
 option(SQLITE_RECOMMENDED_OPTIONS    "compile by SQLite3 recommended options"          ON)
 option(SQLITE_USE_URI                "enables the default URI filename processing"     OFF)
 option(SQLITE_TEMP_STORE             "enables in-memory files"                         ON)
-option(SQLITE_OS_UNIX                "Build for Linux"                                 ON)
-option(SQLITE_OS_WIN                 "Build for Windows"                               OFF)
+if(CMAKE_SYSTEM_NAME MATCHES Linux)
+    option(SQLITE_OS_UNIX            "Build for Linux"                                 ON)
+    option(SQLITE_OS_WIN             "Build for Windows"                               OFF)
+elseif(WIN32)
+    option(SQLITE_OS_UNIX            "Build for Linux"                                 OFF)
+    option(SQLITE_OS_WIN             "Build for Windows"                               ON)
+endif()
+
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Release or Debug?" FORCE)
