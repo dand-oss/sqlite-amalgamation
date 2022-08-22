@@ -133,7 +133,7 @@ int crypto_vfs_writes = 0;
 int crypto_vfs_misses = 0;
 int crypto_vfs_hits = 0;
 
-#include <sqlite3.h>
+#include "sqlite3.h"
 #include <stdio.h>
 
 #include <assert.h>
