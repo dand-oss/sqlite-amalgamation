@@ -13,6 +13,8 @@ asv_cmake_defaults( )
 
 include(GNUInstallDirs)
 
+set(SQLITE3_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/sqlite3)
+
 #------------------------------------------------------------------------------
 # build options and optional modules:
 option(SQLITE_ENABLE_COLUMN_METADATA "enables column metadata"                         OFF)
@@ -53,12 +55,15 @@ endif()
 #------------------------------------------------------------------------------
 
 # SQLite3 as static library:
-add_library(${PROJECT_NAME} STATIC sqlite3.c)
+add_library(${PROJECT_NAME} STATIC ${SQLITE3_SOURCE_DIR}/sqlite3.c)
 set_target_properties(${PROJECT_NAME} PROPERTIES
     OUTPUT_NAME   sqlite3
-    PUBLIC_HEADER sqlite3.h
+    PUBLIC_HEADER ${SQLITE3_SOURCE_DIR}/sqlite3.h
     )
-target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${SQLITE3_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+    )
 target_compile_definitions(${PROJECT_NAME} PUBLIC # inject user's options
     $<BUILD_INTERFACE:
         $<$<BOOL:${SQLITE_ENABLE_COLUMN_METADATA}>:SQLITE_ENABLE_COLUMN_METADATA>
@@ -99,12 +104,15 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC # inject user's options
 set(CRY_PROJECT_NAME ${PROJECT_NAME}cry)
 
 # SQLite3 with Crypto as static library:
-add_library(${CRY_PROJECT_NAME} STATIC sqlite3.c crypto_vfs.c)
+add_library(${CRY_PROJECT_NAME} STATIC ${SQLITE3_SOURCE_DIR}/sqlite3.c crypto_vfs.c)
 set_target_properties(${CRY_PROJECT_NAME} PROPERTIES
     OUTPUT_NAME   sqlite3cry
-    PUBLIC_HEADER sqlite3.h
+    PUBLIC_HEADER ${SQLITE3_SOURCE_DIR}/sqlite3.h
     )
-target_include_directories(${CRY_PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+target_include_directories(${CRY_PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${SQLITE3_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+    )
 target_compile_definitions(${CRY_PROJECT_NAME} PUBLIC # inject user's options
     $<BUILD_INTERFACE:
         $<$<BOOL:${SQLITE_ENABLE_COLUMN_METADATA}>:SQLITE_ENABLE_COLUMN_METADATA>
@@ -144,13 +152,16 @@ target_compile_definitions(${CRY_PROJECT_NAME} PUBLIC # inject user's options
 # DON'T REALLY NEED TO RECOMPILE....
 # SQLite3 as shared library:
 set(SHARED_PROJECT_NAME ${PROJECT_NAME}-shared)
-add_library(${SHARED_PROJECT_NAME} SHARED sqlite3.c)
+add_library(${SHARED_PROJECT_NAME} SHARED ${SQLITE3_SOURCE_DIR}/sqlite3.c)
 set_target_properties(${SHARED_PROJECT_NAME} PROPERTIES
     OUTPUT_NAME   sqlite3-shared
-    PUBLIC_HEADER sqlite3.h
+    PUBLIC_HEADER ${SQLITE3_SOURCE_DIR}/sqlite3.h
     WINDOWS_EXPORT_ALL_SYMBOLS ON
     )
-target_include_directories(${SHARED_PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+target_include_directories(${SHARED_PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${SQLITE3_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+    )
 target_compile_definitions(${SHARED_PROJECT_NAME} PUBLIC # inject user's options
     # copy of above
     $<BUILD_INTERFACE:
@@ -188,13 +199,16 @@ target_compile_definitions(${SHARED_PROJECT_NAME} PUBLIC # inject user's options
 #------------------------------------------------------------------------------
 # SQLite3 with Crypto as shared library:
 set(SHARED_CRY_PROJECT_NAME ${PROJECT_NAME}cry-shared)
-add_library(${SHARED_CRY_PROJECT_NAME} SHARED sqlite3.c crypto_vfs.c)
+add_library(${SHARED_CRY_PROJECT_NAME} SHARED ${SQLITE3_SOURCE_DIR}/sqlite3.c crypto_vfs.c)
 set_target_properties(${SHARED_CRY_PROJECT_NAME} PROPERTIES
     OUTPUT_NAME   sqlite3cry-shared
-    PUBLIC_HEADER sqlite3.h
+    PUBLIC_HEADER ${SQLITE3_SOURCE_DIR}/sqlite3.h
     WINDOWS_EXPORT_ALL_SYMBOLS ON
     )
-target_include_directories(${SHARED_CRY_PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+target_include_directories(${SHARED_CRY_PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${SQLITE3_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+    )
 target_compile_definitions(${SHARED_CRY_PROJECT_NAME} PUBLIC # inject user's options
     # copy of above
     $<BUILD_INTERFACE:
@@ -307,12 +321,12 @@ install(FILES
 # SQLite3 shell application:
 option(BUILD_SHELL "build SQLite3 shell application" ON)
 if(BUILD_SHELL)
-    add_executable(shell_app shell.c)
+    add_executable(shell_app ${SQLITE3_SOURCE_DIR}/shell.c)
     set_target_properties(shell_app PROPERTIES OUTPUT_NAME sqlite3)
     target_link_libraries(shell_app PRIVATE ${PROJECT_NAME})
 
 # crypto shell
-    add_executable(shell_app_cry shell.c)
+    add_executable(shell_app_cry ${SQLITE3_SOURCE_DIR}/shell.c)
     set_target_properties(shell_app_cry PROPERTIES OUTPUT_NAME sqlite3cry)
     target_link_libraries(shell_app_cry PRIVATE ${CRY_PROJECT_NAME})
 
