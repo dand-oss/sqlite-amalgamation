@@ -15,41 +15,8 @@ include(GNUInstallDirs)
 
 set(SQLITE3_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/sqlite3)
 
-#------------------------------------------------------------------------------
-# build options and optional modules:
-option(SQLITE_ENABLE_COLUMN_METADATA "enables column metadata"                         OFF)
-option(SQLITE_ENABLE_DBSTAT_VTAB     "enables dbstat virtual table"                    OFF)
-option(SQLITE_ENABLE_FTS3            "enables full text searches version 3"            OFF)
-option(SQLITE_ENABLE_FTS4            "enables full text searches version 3 & 4"        OFF)
-option(SQLITE_ENABLE_FTS5            "enables full text searches version 5"            ON)
-option(SQLITE_ENABLE_GEOPOLY         "enables Geopoly extention"                       OFF)
-option(SQLITE_ENABLE_ICU             "enables international components for unicode"    OFF)
-option(SQLITE_ENABLE_MATH_FUNCTIONS  "enables the built-in SQL math functions"         ON)
-option(SQLITE_ENABLE_RBU             "enables resumable bulk update extension"         ON)
-option(SQLITE_ENABLE_RTREE           "enables R*TRee index extension"                  ON)
-option(SQLITE_ENABLE_STAT4           "enhances query planner under certain situations" OFF)
-option(SQLITE_OMIT_DECLTYPE          "omit declared type of columns"                   ON)
-option(SQLITE_OMIT_JSON              "disables JSON SQL functions"                     OFF)
-option(SQLITE_RECOMMENDED_OPTIONS    "compile by SQLite3 recommended options"          ON)
-option(SQLITE_USE_URI                "enables the default URI filename processing"     OFF)
-option(SQLITE_TEMP_STORE             "enables in-memory files"                         ON)
-if(CMAKE_SYSTEM_NAME MATCHES Linux)
-    option(SQLITE_OS_UNIX            "Build for Linux"                                 ON)
-    option(SQLITE_OS_WIN             "Build for Windows"                               OFF)
-elseif(WIN32)
-    option(SQLITE_OS_UNIX            "Build for Linux"                                 OFF)
-    option(SQLITE_OS_WIN             "Build for Windows"                               ON)
-endif()
-
-
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Release or Debug?" FORCE)
-endif()
-
-if(SQLITE_ENABLE_COLUMN_METADATA AND SQLITE_OMIT_DECLTYPE)
-    message(FATAL_ERROR "please unset the SQLITE_OMIT_DECLTYPE if you want to\
-    compile with SQLITE_ENABLE_COLUMN_METADATA,\
-    compiling with both options ON, is not recommended.")
 endif()
 
 #------------------------------------------------------------------------------
@@ -63,40 +30,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${SQLITE3_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
-    )
-target_compile_definitions(${PROJECT_NAME} PUBLIC # inject user's options
-    $<BUILD_INTERFACE:
-        $<$<BOOL:${SQLITE_ENABLE_COLUMN_METADATA}>:SQLITE_ENABLE_COLUMN_METADATA>
-        $<$<BOOL:${SQLITE_ENABLE_DBSTAT_VTAB}>:SQLITE_ENABLE_DBSTAT_VTAB>
-        $<$<BOOL:${SQLITE_ENABLE_FTS3}>:SQLITE_ENABLE_FTS3>
-        $<$<BOOL:${SQLITE_ENABLE_FTS4}>:SQLITE_ENABLE_FTS4>
-        $<$<BOOL:${SQLITE_ENABLE_FTS5}>:SQLITE_ENABLE_FTS5>
-        $<$<BOOL:${SQLITE_ENABLE_GEOPOLY}>:SQLITE_ENABLE_GEOPOLY>
-        $<$<BOOL:${SQLITE_ENABLE_ICU}>:SQLITE_ENABLE_ICU>
-        $<$<BOOL:${SQLITE_ENABLE_MATH_FUNCTIONS}>:SQLITE_ENABLE_MATH_FUNCTIONS>
-        $<$<BOOL:${SQLITE_ENABLE_RBU}>:SQLITE_ENABLE_RBU>
-        $<$<BOOL:${SQLITE_ENABLE_RTREE}>:SQLITE_ENABLE_RTREE>
-        $<$<BOOL:${SQLITE_ENABLE_STAT4}>:SQLITE_ENABLE_STAT4>
-        $<$<BOOL:${SQLITE_OMIT_DECLTYPE}>:SQLITE_OMIT_DECLTYPE>
-        $<$<BOOL:${SQLITE_OMIT_JSON}>:SQLITE_OMIT_JSON>
-        $<$<BOOL:${SQLITE_USE_URI}>:SQLITE_USE_URI>
-        $<$<BOOL:${SQLITE_ENABLE_THREADSAFE}>:SQLITE_ENABLE_THREADSAFE>
-        $<$<BOOL:${SQLITE_TEMP_STORE}>:SQLITE_TEMP_STORE>
-        $<$<BOOL:${SQLITE_OS_UNIX}>:SQLITE_OS_UNIX>
-        $<$<BOOL:${SQLITE_OS_WIN}>:SQLITE_OS_WIN>
-
-        $<$<BOOL:${SQLITE_RECOMMENDED_OPTIONS}>:
-            SQLITE_DEFAULT_MEMSTATUS=0
-            SQLITE_DEFAULT_WAL_SYNCHRONOUS=1
-            SQLITE_DQS=0
-            SQLITE_LIKE_DOESNT_MATCH_BLOBS
-            SQLITE_MAX_EXPR_DEPTH=0
-            # SQLITE_OMIT_DEPRECATED
-            # SQLITE_OMIT_PROGRESS_CALLBACK
-            # SQLITE_OMIT_SHARED_CACHE
-            SQLITE_USE_ALLOCA
-        >
-    >
     )
 
 #------------------------------------------------------------------------------
@@ -113,39 +46,8 @@ target_include_directories(${CRY_PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${SQLITE3_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
     )
-target_compile_definitions(${CRY_PROJECT_NAME} PUBLIC # inject user's options
-    $<BUILD_INTERFACE:
-        $<$<BOOL:${SQLITE_ENABLE_COLUMN_METADATA}>:SQLITE_ENABLE_COLUMN_METADATA>
-        $<$<BOOL:${SQLITE_ENABLE_DBSTAT_VTAB}>:SQLITE_ENABLE_DBSTAT_VTAB>
-        $<$<BOOL:${SQLITE_ENABLE_FTS3}>:SQLITE_ENABLE_FTS3>
-        $<$<BOOL:${SQLITE_ENABLE_FTS4}>:SQLITE_ENABLE_FTS4>
-        $<$<BOOL:${SQLITE_ENABLE_FTS5}>:SQLITE_ENABLE_FTS5>
-        $<$<BOOL:${SQLITE_ENABLE_GEOPOLY}>:SQLITE_ENABLE_GEOPOLY>
-        $<$<BOOL:${SQLITE_ENABLE_ICU}>:SQLITE_ENABLE_ICU>
-        $<$<BOOL:${SQLITE_ENABLE_MATH_FUNCTIONS}>:SQLITE_ENABLE_MATH_FUNCTIONS>
-        $<$<BOOL:${SQLITE_ENABLE_RBU}>:SQLITE_ENABLE_RBU>
-        $<$<BOOL:${SQLITE_ENABLE_RTREE}>:SQLITE_ENABLE_RTREE>
-        $<$<BOOL:${SQLITE_ENABLE_STAT4}>:SQLITE_ENABLE_STAT4>
-        $<$<BOOL:${SQLITE_OMIT_DECLTYPE}>:SQLITE_OMIT_DECLTYPE>
-        $<$<BOOL:${SQLITE_OMIT_JSON}>:SQLITE_OMIT_JSON>
-        $<$<BOOL:${SQLITE_USE_URI}>:SQLITE_USE_URI>
-        $<$<BOOL:${SQLITE_ENABLE_THREADSAFE}>:SQLITE_ENABLE_THREADSAFE>
-        $<$<BOOL:${SQLITE_TEMP_STORE}>:SQLITE_TEMP_STORE>
-        $<$<BOOL:${SQLITE_OS_UNIX}>:SQLITE_OS_UNIX>
-        $<$<BOOL:${SQLITE_OS_WIN}>:SQLITE_OS_WIN>
-        $<$<BOOL:${SQLITE_RECOMMENDED_OPTIONS}>:
-            SQLITE_DEFAULT_MEMSTATUS=0
-            SQLITE_DEFAULT_WAL_SYNCHRONOUS=1
-            SQLITE_DQS=0
-            SQLITE_LIKE_DOESNT_MATCH_BLOBS
-            SQLITE_MAX_EXPR_DEPTH=0
-            # SQLITE_OMIT_DEPRECATED
-            # SQLITE_OMIT_PROGRESS_CALLBACK
-            # SQLITE_OMIT_SHARED_CACHE
-            SQLITE_USE_ALLOCA
-        >
-        SQLITE_CRYVFS
-    >
+target_compile_definitions(${CRY_PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:SQLITE_CRYVFS>
     )
 
 #------------------------------------------------------------------------------
@@ -162,39 +64,6 @@ target_include_directories(${SHARED_PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${SQLITE3_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
     )
-target_compile_definitions(${SHARED_PROJECT_NAME} PUBLIC # inject user's options
-    # copy of above
-    $<BUILD_INTERFACE:
-        $<$<BOOL:${SQLITE_ENABLE_DBSTAT_VTAB}>:SQLITE_ENABLE_DBSTAT_VTAB>
-        $<$<BOOL:${SQLITE_ENABLE_FTS3}>:SQLITE_ENABLE_FTS3>
-        $<$<BOOL:${SQLITE_ENABLE_FTS4}>:SQLITE_ENABLE_FTS4>
-        $<$<BOOL:${SQLITE_ENABLE_FTS5}>:SQLITE_ENABLE_FTS5>
-        $<$<BOOL:${SQLITE_ENABLE_GEOPOLY}>:SQLITE_ENABLE_GEOPOLY>
-        $<$<BOOL:${SQLITE_ENABLE_ICU}>:SQLITE_ENABLE_ICU>
-        $<$<BOOL:${SQLITE_ENABLE_JSON1}>:SQLITE_ENABLE_JSON1>
-        $<$<BOOL:${SQLITE_ENABLE_MATH_FUNCTIONS}>:SQLITE_ENABLE_MATH_FUNCTIONS>
-        $<$<BOOL:${SQLITE_ENABLE_RBU}>:SQLITE_ENABLE_RBU>
-        $<$<BOOL:${SQLITE_ENABLE_RTREE}>:SQLITE_ENABLE_RTREE>
-        $<$<BOOL:${SQLITE_ENABLE_STAT4}>:SQLITE_ENABLE_STAT4>
-        $<$<BOOL:${SQLITE_USE_URI}>:SQLITE_USE_URI>
-        $<$<BOOL:${SQLITE_ENABLE_THREADSAFE}>:SQLITE_ENABLE_THREADSAFE>
-        $<$<BOOL:${SQLITE_TEMP_STORE}>:SQLITE_TEMP_STORE>
-        $<$<BOOL:${SQLITE_OS_UNIX}>:SQLITE_OS_UNIX>
-        $<$<BOOL:${SQLITE_OS_WIN}>:SQLITE_OS_WIN>
-        $<$<BOOL:${SQLITE_RECOMMENDED_OPTIONS}>:
-            SQLITE_DQS=0
-            SQLITE_DEFAULT_MEMSTATUS=0
-            SQLITE_DEFAULT_WAL_SYNCHRONOUS=1
-            SQLITE_LIKE_DOESNT_MATCH_BLOBS
-            SQLITE_MAX_EXPR_DEPTH=0
-            # ASI SQLITE_OMIT_DECLTYPE
-            # ASI SQLITE_OMIT_DEPRECATED
-            # ASI SQLITE_OMIT_PROGRESS_CALLBACK
-            # SQLITE_OMIT_SHARED_CACHE
-             SQLITE_USE_ALLOCA
-         >
-     >
-     )
 
 #------------------------------------------------------------------------------
 # SQLite3 with Crypto as shared library:
@@ -209,39 +78,8 @@ target_include_directories(${SHARED_CRY_PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${SQLITE3_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
     )
-target_compile_definitions(${SHARED_CRY_PROJECT_NAME} PUBLIC # inject user's options
-    # copy of above
-    $<BUILD_INTERFACE:
-        $<$<BOOL:${SQLITE_ENABLE_DBSTAT_VTAB}>:SQLITE_ENABLE_DBSTAT_VTAB>
-        $<$<BOOL:${SQLITE_ENABLE_FTS3}>:SQLITE_ENABLE_FTS3>
-        $<$<BOOL:${SQLITE_ENABLE_FTS4}>:SQLITE_ENABLE_FTS4>
-        $<$<BOOL:${SQLITE_ENABLE_FTS5}>:SQLITE_ENABLE_FTS5>
-        $<$<BOOL:${SQLITE_ENABLE_GEOPOLY}>:SQLITE_ENABLE_GEOPOLY>
-        $<$<BOOL:${SQLITE_ENABLE_ICU}>:SQLITE_ENABLE_ICU>
-        $<$<BOOL:${SQLITE_ENABLE_JSON1}>:SQLITE_ENABLE_JSON1>
-        $<$<BOOL:${SQLITE_ENABLE_MATH_FUNCTIONS}>:SQLITE_ENABLE_MATH_FUNCTIONS>
-        $<$<BOOL:${SQLITE_ENABLE_RBU}>:SQLITE_ENABLE_RBU>
-        $<$<BOOL:${SQLITE_ENABLE_RTREE}>:SQLITE_ENABLE_RTREE>
-        $<$<BOOL:${SQLITE_ENABLE_STAT4}>:SQLITE_ENABLE_STAT4>
-        $<$<BOOL:${SQLITE_USE_URI}>:SQLITE_USE_URI>
-        $<$<BOOL:${SQLITE_ENABLE_THREADSAFE}>:SQLITE_ENABLE_THREADSAFE>
-        $<$<BOOL:${SQLITE_TEMP_STORE}>:SQLITE_TEMP_STORE>
-        $<$<BOOL:${SQLITE_OS_UNIX}>:SQLITE_OS_UNIX>
-        $<$<BOOL:${SQLITE_OS_WIN}>:SQLITE_OS_WIN>
-        $<$<BOOL:${SQLITE_RECOMMENDED_OPTIONS}>:
-            SQLITE_DQS=0
-            SQLITE_DEFAULT_MEMSTATUS=0
-            SQLITE_DEFAULT_WAL_SYNCHRONOUS=1
-            SQLITE_LIKE_DOESNT_MATCH_BLOBS
-            SQLITE_MAX_EXPR_DEPTH=0
-            # ASI SQLITE_OMIT_DECLTYPE
-            # ASI SQLITE_OMIT_DEPRECATED
-            # ASI SQLITE_OMIT_PROGRESS_CALLBACK
-            # SQLITE_OMIT_SHARED_CACHE
-             SQLITE_USE_ALLOCA
-         >
-        SQLITE_CRYVFS
-     >
+target_compile_definitions(${SHARED_CRY_PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:SQLITE_CRYVFS>
      )
 
 #------------------------------------------------------------------------------
@@ -257,31 +95,6 @@ if(CMAKE_SYSTEM_NAME MATCHES Linux)
     target_link_libraries(${SHARED_CRY_PROJECT_NAME} PUBLIC Threads::Threads ${CMAKE_DL_LIBS} m)
     set_target_properties(${SHARED_CRY_PROJECT_NAME} PROPERTIES LINK_FLAGS "-Wl,--no-undefined")
 
-elseif(WIN32 AND ${CMAKE_SIZEOF_VOID_P} LESS 8) # this is a 32bit windows
-    option(BUILD_WITH_XPSDK "build for old 32bit (WinXP/2003) targets" OFF)
-    if(BUILD_WITH_XPSDK)
-        target_compile_definitions(${PROJECT_NAME} PUBLIC
-            $<BUILD_INTERFACE:
-                -DSQLITE_OS_WINRT=0 -D_WIN32_WINNT=0x0502 -DWINVER=0x0502
-            >
-            )
-        target_compile_definitions(${CRY_PROJECT_NAME} PUBLIC
-            $<BUILD_INTERFACE:
-                -DSQLITE_OS_WINRT=0 -D_WIN32_WINNT=0x0502 -DWINVER=0x0502
-            >
-            )
-
-        target_compile_definitions(${SHARED_PROJECT_NAME} PUBLIC
-            $<BUILD_INTERFACE:
-                -DSQLITE_OS_WINRT=0 -D_WIN32_WINNT=0x0502 -DWINVER=0x0502
-            >
-            )
-        target_compile_definitions(${SHARED_CRY_PROJECT_NAME} PUBLIC
-            $<BUILD_INTERFACE:
-                -DSQLITE_OS_WINRT=0 -D_WIN32_WINNT=0x0502 -DWINVER=0x0502
-            >
-            )
-    endif()
 endif()
 
 #------------------------------------------------------------------------------
