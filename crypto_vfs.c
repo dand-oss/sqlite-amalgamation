@@ -136,6 +136,26 @@ int crypto_vfs_hits = 0;
 #include "sqlite3.h"
 #include <stdio.h>
 
+#ifndef SQLITE_OS_UNIX
+# if defined(_WIN32)
+#  define SQLITE_OS_UNIX 0
+# else
+#  define SQLITE_OS_UNIX 1
+# endif
+#endif
+
+#ifndef SQLITE_OS_WIN
+# if defined(_WIN32)
+#  define SQLITE_OS_WIN 1
+# else
+#  define SQLITE_OS_WIN 0
+# endif
+#endif
+
+#ifndef SQLITE_OS_WINNT
+# define SQLITE_OS_WINNT SQLITE_OS_WIN
+#endif
+
 #include <assert.h>
 #include <string.h>
 #include <sys/types.h>
@@ -1117,7 +1137,7 @@ static int cryptoRandomness(sqlite3_vfs *pVfs, int nByte, char *zByte){
 ** of microseconds slept for.
 */
 static int cryptoSleep(sqlite3_vfs *pVfs, int nMicro){
-#if defined(SQLITE_OS_WIN)
+#if SQLITE_OS_WIN
     Sleep(nMicro / 1000);
 #else
     sleep(nMicro / 1000000);
