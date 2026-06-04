@@ -6,30 +6,15 @@ this repository contains a cmake based build of sqlite (and its tools) based on 
 Build the VxWorks crypto package into a platform-specific prefix:
 
 ```bash
-cmake -S . -B build/scadapack-vxworks \
-  -DCMAKE_TOOLCHAIN_FILE=/path/to/ScadaPack350Toolchain.cmake \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DSQLITE_ENABLE_VXWORKS=ON \
-  -DBUILD_SHELL=OFF \
-  -DSCADAPACK_CTOOLS=/path/to/ctools \
-  -DCMAKE_INSTALL_PREFIX=/i/ports/install/sqlite3/scadapack-vxworks
-
-cmake --build build/scadapack-vxworks
-cmake --install build/scadapack-vxworks
+./build-scadapack-vxworks.sh
 ```
 
 The install exports the normal package target `SQLite::SQLite3cry`; the install
 prefix identifies the platform.
 
-Required CMake cache settings:
-
-| Option | Value | Purpose |
-| --- | --- | --- |
-| `CMAKE_TOOLCHAIN_FILE` | SCADAPack ARM/VxWorks toolchain file | Selects `arm-none-eabi-*` tools and VxWorks link settings. |
-| `SQLITE_ENABLE_VXWORKS` | `ON` | Builds the SCADAPack VxWorks `SQLite3cry` static archive only. |
-| `BUILD_SHELL` | `OFF` | Skips host shell executables that are not part of the firmware package. |
-| `SCADAPACK_CTOOLS` | SCADAPack CTools root | Provides VxWorks and TelePACE headers. |
-| `CMAKE_INSTALL_PREFIX` | Platform-specific install prefix | Keeps the exported package discoverable without renaming the target. |
+The script defaults to `/i/ports/install/sqlite3/scadapack-vxworks`. Override
+the default paths with `SCADAPACK_FIRMWARE_ROOT`, `SCADAPACK_SQLITE_BUILD_DIR`,
+`SCADAPACK_SQLITE_PREFIX`, or `SCADAPACK_CTOOLS`.
 
 The VxWorks target adds SCADAPack CPU/toolchain defines, disables SQLite
 threading/loadable extensions, keeps crypto VFS enabled, and exports the normal
