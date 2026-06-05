@@ -48,6 +48,15 @@ function(sqlite_configure_scadapack_vxworks target_name)
         -mno-thumb-interwork
         -mlittle-endian
 
+        # Match the firmware's codegen policy so the module loads on the controller.
+        # -fno-builtin: stop GCC rewriting printf("..\n")->puts and printf("%c")->putchar
+        #   -- the firmware exports printf but not necessarily those, and the rewrite
+        #   added puts/putchar imports the loader could not resolve.
+        # -fno-gnu-unique: never emit STB_GNU_UNIQUE bindings, which the old SCADAPack
+        #   VxWorks loader may reject. (bead 2.41)
+        -fno-builtin
+        -fno-gnu-unique
+
         # VxWorks compatibility shim for amalgamated SQLite.
         -include
         "${CMAKE_CURRENT_SOURCE_DIR}/compat/vxworks/sqlite3_vxworks_compat.h"
