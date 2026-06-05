@@ -48,6 +48,11 @@ function(sqlite_configure_scadapack_vxworks target_name)
         -mno-thumb-interwork
         -mlittle-endian
 
+        # Optimize for size: the firmware image is footprint- and load-time-bound on
+        # the controller (loads take ~30 min), and SQLite is the bulk of the image.
+        # -Os comes after the Release build-type -O3, so it wins. (bead 2.41 footprint)
+        -Os
+
         # Match the firmware's codegen policy so the module loads on the controller.
         # -fno-builtin: stop GCC rewriting printf("..\n")->puts and printf("%c")->putchar
         #   -- the firmware exports printf but not necessarily those, and the rewrite
