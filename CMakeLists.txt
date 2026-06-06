@@ -33,6 +33,44 @@ function(sqlite_configure_scadapack_vxworks target_name)
 
     set(scadapack_ctools_target_dir "${SCADAPACK_CTOOLS}/Arm7/target")
     set(scadapack_telepace_dir "${SCADAPACK_CTOOLS}/Controller/TelePACE")
+    if(CMAKE_C_COMPILER MATCHES "arm-wrs-vxworks")
+        set(scadapack_using_ctools TRUE)
+    else()
+        set(scadapack_using_ctools FALSE)
+    endif()
+    if(scadapack_using_ctools AND CMAKE_HOST_WIN32)
+        set(scadapack_include_overlay "${CMAKE_BINARY_DIR}/include-overlay")
+        file(MAKE_DIRECTORY "${scadapack_include_overlay}")
+        file(WRITE "${scadapack_include_overlay}/stdint.h" [=[
+#ifndef SCADAPACK_SQLITE_OVERLAY_STDINT_H
+#define SCADAPACK_SQLITE_OVERLAY_STDINT_H
+
+/*
+** VxWorks provides the fixed-width integer typedefs through vxTypes.h, but
+** the old CTools include tree does not provide a C99 stdint.h entry point.
+*/
+#include <vxWorks.h>
+
+typedef unsigned int uintptr_t;
+typedef int intptr_t;
+
+#define INT8_MAX 127
+#define INT16_MAX 32767
+#define INT32_MAX 2147483647
+#define INT64_MAX 9223372036854775807LL
+#define UINT8_MAX 255U
+#define UINT16_MAX 65535U
+#define UINT32_MAX 4294967295U
+#define UINT64_MAX 18446744073709551615ULL
+#define INT64_C(value) value ## LL
+#define UINT64_C(value) value ## ULL
+
+#endif
+]=])
+        target_include_directories(${target_name} PRIVATE
+            "${scadapack_include_overlay}"          # Windows CTools C99 header shim.
+            )
+    endif()
 
     target_include_directories(${target_name} PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/compat/vxworks" # POSIX header shims for SQLite.
@@ -67,8 +105,12 @@ function(sqlite_configure_scadapack_vxworks target_name)
         "${CMAKE_CURRENT_SOURCE_DIR}/compat/vxworks/sqlite3_vxworks_compat.h"
         -std=gnu89
         -Wno-implicit-function-declaration
-        -Wno-builtin-declaration-mismatch
         )
+    if(NOT scadapack_using_ctools)
+        target_compile_options(${target_name} PRIVATE
+            -Wno-builtin-declaration-mismatch
+            )
+    endif()
     target_compile_definitions(${target_name} PRIVATE
         # SCADAPack/VxWorks platform and toolchain identity.
         SCADAPACK_VXWORKS_SQLITE=1
