@@ -87,13 +87,6 @@ typedef int intptr_t;
         "${scadapack_ctools_target_dir}/h/wrn/coreip"
         )
     target_compile_options(${target_name} PRIVATE
-        # SCADAPack ARM ABI.
-        -march=armv4
-        -mapcs
-        -mabi=apcs-gnu
-        -mno-thumb-interwork
-        -mlittle-endian
-
         # Optimize for size: the firmware image is footprint- and load-time-bound on
         # the controller (loads take ~30 min), and SQLite is the bulk of the image.
         # -Os comes after the Release build-type -O3, so it wins. (bead 2.41 footprint)
@@ -103,10 +96,7 @@ typedef int intptr_t;
         # -fno-builtin: stop GCC rewriting printf("..\n")->puts and printf("%c")->putchar
         #   -- the firmware exports printf but not necessarily those, and the rewrite
         #   added puts/putchar imports the loader could not resolve.
-        # -fno-gnu-unique: never emit STB_GNU_UNIQUE bindings, which the old SCADAPack
-        #   VxWorks loader may reject. (bead 2.41)
         -fno-builtin
-        -fno-gnu-unique
 
         # VxWorks compatibility shim for amalgamated SQLite.
         -include
@@ -117,6 +107,27 @@ typedef int intptr_t;
     if(NOT scadapack_using_ctools)
         target_compile_options(${target_name} PRIVATE
             -Wno-builtin-declaration-mismatch
+            )
+    endif()
+    if(scadapack_using_ctools AND CMAKE_HOST_WIN32)
+        target_compile_options(${target_name} PRIVATE
+            # SCADAPack CTools ARM ABI.
+            -march=armv4
+            -mapcs-32
+            -mlittle-endian
+            )
+    else()
+        target_compile_options(${target_name} PRIVATE
+            # SCADAPack Linux cross-compiler ARM ABI.
+            -march=armv4
+            -mapcs
+            -mabi=apcs-gnu
+            -mno-thumb-interwork
+            -mlittle-endian
+
+            # Never emit STB_GNU_UNIQUE bindings, which the old SCADAPack
+            # VxWorks loader may reject. (bead 2.41)
+            -fno-gnu-unique
             )
     endif()
     target_compile_definitions(${target_name} PRIVATE
