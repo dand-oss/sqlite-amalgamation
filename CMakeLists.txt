@@ -15,6 +15,14 @@ include(GNUInstallDirs)
 
 set(SQLITE3_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/sqlite3)
 
+if(CMAKE_C_COMPILER MATCHES "arm-wrs-vxworks" AND CMAKE_HOST_WIN32)
+    set(CMAKE_DEPFILE_FLAGS_C "")
+    set(CMAKE_C_DEPENDS_USE_COMPILER FALSE)
+    set(CMAKE_C_COMPILE_OBJECT
+        "<CMAKE_C_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>"
+        )
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Release or Debug?" FORCE)
 endif()
